@@ -9,8 +9,14 @@ const json = (res, status, body) => {
   res.end(JSON.stringify(body))
 }
 
-const readBody = (req) =>
-  new Promise((resolve, reject) => {
+const readBody = (req) => {
+  // Serverless runtimes parse the JSON body for you and leave the stream
+  // already consumed, so waiting on 'data' there hangs until the function
+  // times out. Vite's middleware does not, hence both paths.
+  if (req.body != null) {
+    return Promise.resolve(typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body)
+  }
+  return new Promise((resolve, reject) => {
     let raw = ''
     req.on('data', (c) => (raw += c))
     req.on('end', () => {
@@ -22,6 +28,7 @@ const readBody = (req) =>
     })
     req.on('error', reject)
   })
+}
 
 /** Runs a filter and returns the count plus a capped preview. */
 export async function runFilter(filter) {

@@ -129,6 +129,35 @@ and the API key never reaches the browser. The database is
 [PGlite](https://pglite.dev) — real Postgres, in process, seeded at startup from
 `sql/schema.sql`. No external database to provision.
 
+## Deploying
+
+The API lives in Vite's dev-server middleware, which exists only under
+`npm run dev`. `vite build` emits static files, so a plain deploy serves the UI
+and 404s every `/api/*` call — the campaign list and the provider list come back
+empty and nothing works.
+
+`api/index.js` is the same handler as a serverless function, and `vercel.json`
+rewrites `/api/*` onto it. One handler, two hosts.
+
+Set these in the Vercel project's environment variables — `.env` is gitignored
+and never reaches the deploy:
+
+| Variable | Needed for |
+|---|---|
+| `OPENROUTER_API_KEY` | filling forms and parsing audiences |
+| `ANTHROPIC_API_KEY` | only if you want the Claude-direct provider |
+| `PARSER_PROVIDER` | optional; otherwise the first configured provider wins |
+| `OPENROUTER_MODEL_OPENROUTER` | optional model override |
+
+`maxDuration` is set to 60s because a model call takes 7–20s and the default
+10s cuts it off mid-request.
+
+**What does not survive deployment:** each function instance seeds its own
+in-process PGlite database, about 1.8s on a cold start. Sends are written to
+that instance and vanish with it, and two concurrent instances do not see each
+other's data. The demo works; persistence does not. Point `server/db.mjs` at a
+hosted Postgres when that matters.
+
 ## The design decision that matters
 
 **The model never writes SQL.** It fills in a form:
