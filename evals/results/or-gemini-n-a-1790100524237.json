@@ -1,0 +1,105 @@
+{
+  "provider": "or/gemini",
+  "effort": "n/a",
+  "passed": 0,
+  "total": 12,
+  "avgMs": 120,
+  "results": [
+    {
+      "name": "state + unreplied within window",
+      "prompt": "everyone in Florida who got a review in the last 90 days but never replied to it",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and state = 'FL' and last_unreplied_review_at >= now() - interval '90 days'",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 289
+    },
+    {
+      "name": "pro + state + rating floor",
+      "prompt": "PRO subscribers in Texas with an average rating of at least 4.5",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and is_pro and state = 'TX' and subscription_status in ('active','trialing') and avg_rating >= 4.5",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 433
+    },
+    {
+      "name": "absence — no reviews at all",
+      "prompt": "professionals with no reviews at all",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and review_count = 0",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 75
+    },
+    {
+      "name": "industry + state + calendar year",
+      "prompt": "mortgage professionals in Florida who joined this year",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and industry = 'Mortgage' and state = 'FL' and joined_at >= date_trunc('year', now())",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 75
+    },
+    {
+      "name": "lapsed subscriptions",
+      "prompt": "customers whose subscription was cancelled or is past due",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and subscription_status in ('canceled','past_due')",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 77
+    },
+    {
+      "name": "inactivity, including never-logged-in",
+      "prompt": "anyone who hasn't logged in for 60 days",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and (last_login_at is null or last_login_at < now() - interval '60 days')",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 66
+    },
+    {
+      "name": "ranking + limit",
+      "prompt": "top 100 by search rank score in California",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and state = 'CA'\n                order by srs_score desc nulls last limit 100",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 71
+    },
+    {
+      "name": "multi-city + industry",
+      "prompt": "insurance professionals in Miami or Tampa",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and industry = 'Insurance' and city in ('Miami','Tampa')",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 67
+    },
+    {
+      "name": "subscribers with a review-count ceiling",
+      "prompt": "subscribers with fewer than 5 reviews",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and subscription_status in ('active','trialing') and review_count < 5",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 79
+    },
+    {
+      "name": "unreplied, no time window",
+      "prompt": "professionals who have at least one review they never replied to",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and unreplied_count > 0",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 60
+    },
+    {
+      "name": "multi-state",
+      "prompt": "everyone in Georgia or Washington",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and state in ('GA','WA')",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 81
+    },
+    {
+      "name": "combined — state, pro, volume, recency",
+      "prompt": "PRO professionals in Florida with more than 10 reviews who got a review in the last 30 days",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and is_pro and state = 'FL' and review_count > 10 and last_review_at >= now() - interval '30 days'",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 65536 tokens, but can only afford 10666. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 68
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "provider": "or/openrouter",
+  "passed": 1,
+  "total": 1,
+  "acc": 1,
+  "avgMs": 20682,
+  "results": [
+    {
+      "name": "must not swap contact details",
+      "passed": true,
+      "wrong": [],
+      "fieldAccuracy": 1,
+      "drafts": [
+        {
+          "recipient_first_name": "Yvonne",
+          "recipient_last_name": "Adeyemi",
+          "email": "yvonne.a@example.com",
+          "contact_number": null,
+          "transaction_id": "PT-88",
+          "transaction_type": "listing",
+          "transaction_date": "2026-09-12",
+          "participant_type": "SELLER",
+          "city": "Atlanta",
+          "state": "GA"
+        },
+        {
+          "recipient_first_name": "Samuel",
+          "recipient_last_name": "Brennan",
+          "email": "samuel.brennan@example.com",
+          "contact_number": null,
+          "transaction_id": "PT-89",
+          "transaction_type": "listing",
+          "transaction_date": "2026-09-12",
+          "participant_type": "SELLER",
+          "city": "Atlanta",
+          "state": "GA"
+        }
+      ],
+      "ms": 20682
+    }
+  ]
+}

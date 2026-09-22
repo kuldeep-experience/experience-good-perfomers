@@ -1,0 +1,17 @@
+{
+  "provider": "or/gemini",
+  "effort": "n/a",
+  "passed": 0,
+  "total": 1,
+  "avgMs": 743,
+  "results": [
+    {
+      "name": "multi-state",
+      "prompt": "everyone in Georgia or Washington",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and state in ('GA','WA')",
+      "passed": false,
+      "error": "OpenRouter/gemini 402: This request requires more credits, or fewer max_tokens. You requested up to 12000 tokens, but can only afford 8671. To increase, visit https://openrouter.ai/workspaces/default/keys/3e2faba684671e953630b76ad78f7414c934e3e471d0745affdcfcda2469070e and adjust the key's total limit",
+      "ms": 743
+    }
+  ]
+}

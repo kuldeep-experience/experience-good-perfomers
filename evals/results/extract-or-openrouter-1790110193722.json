@@ -1,0 +1,298 @@
+{
+  "provider": "or/openrouter",
+  "passed": 6,
+  "total": 8,
+  "acc": 0.9125,
+  "avgMs": 17536,
+  "results": [
+    {
+      "name": "one person, plain sentence",
+      "passed": true,
+      "wrong": [],
+      "fieldAccuracy": 1,
+      "drafts": [
+        {
+          "recipient_first_name": "John",
+          "recipient_last_name": "Smith",
+          "email": "john.smith@example.com",
+          "contact_number": "555-0134",
+          "transaction_id": "TXN-77401",
+          "transaction_type": "Purchase",
+          "transaction_date": "2026-09-20",
+          "participant_type": "BORROWER",
+          "city": "Austin",
+          "state": "TX"
+        }
+      ],
+      "ms": 13676
+    },
+    {
+      "name": "two participants share one loan",
+      "passed": true,
+      "wrong": [],
+      "fieldAccuracy": 1,
+      "drafts": [
+        {
+          "recipient_first_name": "Rosa",
+          "recipient_last_name": "Delgado",
+          "email": "rosa.delgado@example.com",
+          "contact_number": null,
+          "transaction_id": "TXN-55120",
+          "transaction_type": "Refinance",
+          "transaction_date": "2026-09-15",
+          "participant_type": "BORROWER",
+          "city": "Tampa",
+          "state": "FL"
+        },
+        {
+          "recipient_first_name": "Luis",
+          "recipient_last_name": "Delgado",
+          "email": "luis.delgado@example.com",
+          "contact_number": null,
+          "transaction_id": "TXN-55120",
+          "transaction_type": "Refinance",
+          "transaction_date": "2026-09-15",
+          "participant_type": "COBORROWER",
+          "city": "Tampa",
+          "state": "FL"
+        }
+      ],
+      "ms": 12200
+    },
+    {
+      "name": "pasted spreadsheet, four rows",
+      "passed": true,
+      "wrong": [],
+      "fieldAccuracy": 1,
+      "drafts": [
+        {
+          "recipient_first_name": "Ana",
+          "recipient_last_name": "Reyes",
+          "email": "ana.reyes@example.com",
+          "contact_number": null,
+          "transaction_id": "TXN-60011",
+          "transaction_type": "Purchase",
+          "transaction_date": "2026-09-18",
+          "participant_type": "BORROWER",
+          "city": "Miami",
+          "state": "FL"
+        },
+        {
+          "recipient_first_name": "Marcus",
+          "recipient_last_name": "Chen",
+          "email": "marcus.chen@example.com",
+          "contact_number": null,
+          "transaction_id": "TXN-60012",
+          "transaction_type": "Refinance",
+          "transaction_date": "2026-09-19",
+          "participant_type": "BORROWER",
+          "city": "Tampa",
+          "state": "FL"
+        },
+        {
+          "recipient_first_name": "Grace",
+          "recipient_last_name": "Sato",
+          "email": "grace.sato@example.com",
+          "contact_number": null,
+          "transaction_id": "TXN-60014",
+          "transaction_type": "Listing",
+          "transaction_date": "2026-09-21",
+          "participant_type": "SELLER",
+          "city": "Austin",
+          "state": "TX"
+        },
+        {
+          "recipient_first_name": "Omar",
+          "recipient_last_name": "Qureshi",
+          "email": "omar.qureshi@example.com",
+          "contact_number": null,
+          "transaction_id": "TXN-60015",
+          "transaction_type": "Purchase",
+          "transaction_date": "2026-09-22",
+          "participant_type": "BUYER",
+          "city": "Dallas",
+          "state": "TX"
+        }
+      ],
+      "ms": 23299
+    },
+    {
+      "name": "details missing on purpose",
+      "passed": false,
+      "wrong": [
+        {
+          "row": 1,
+          "field": "transaction_type",
+          "got": "Rental",
+          "want": null
+        },
+        {
+          "row": 1,
+          "field": "transaction_date",
+          "got": "2026-09-18",
+          "want": "empty"
+        }
+      ],
+      "fieldAccuracy": 0.8,
+      "drafts": [
+        {
+          "recipient_first_name": null,
+          "recipient_last_name": null,
+          "email": null,
+          "contact_number": null,
+          "transaction_id": "4471",
+          "transaction_type": "Rental",
+          "transaction_date": "2026-09-18",
+          "participant_type": "Customer1",
+          "city": null,
+          "state": null
+        }
+      ],
+      "ms": 49489
+    },
+    {
+      "name": "relative date",
+      "passed": true,
+      "wrong": [],
+      "fieldAccuracy": 1,
+      "drafts": [
+        {
+          "recipient_first_name": "Dana",
+          "recipient_last_name": "Reyes",
+          "email": "dana.reyes@example.com",
+          "contact_number": null,
+          "transaction_id": "DR-2210",
+          "transaction_type": null,
+          "transaction_date": "2026-09-21",
+          "participant_type": "BUYER",
+          "city": "San Diego",
+          "state": "CA"
+        }
+      ],
+      "ms": 14066
+    },
+    {
+      "name": "two-word state name",
+      "passed": true,
+      "wrong": [],
+      "fieldAccuracy": 1,
+      "drafts": [
+        {
+          "recipient_first_name": "Farhan",
+          "recipient_last_name": "Qureshi",
+          "email": "farhan.q@example.com",
+          "contact_number": null,
+          "transaction_id": "TXN-31002",
+          "transaction_type": null,
+          "transaction_date": "2026-09-10",
+          "participant_type": "BORROWER",
+          "city": "San Jose",
+          "state": "CA"
+        }
+      ],
+      "ms": 7301
+    },
+    {
+      "name": "must not swap contact details",
+      "passed": false,
+      "wrong": [
+        {
+          "row": 1,
+          "field": "recipient_first_name",
+          "got": "Samuel",
+          "want": "Yvonne"
+        },
+        {
+          "row": 1,
+          "field": "recipient_last_name",
+          "got": "Brennan",
+          "want": "Adeyemi"
+        },
+        {
+          "row": 1,
+          "field": "email",
+          "got": "samuel.brennan@example.com",
+          "want": "yvonne.a@example.com"
+        },
+        {
+          "row": 1,
+          "field": "transaction_id",
+          "got": "PT-89",
+          "want": "PT-88"
+        },
+        {
+          "row": 1,
+          "field": "transaction_type",
+          "got": "Listing",
+          "want": null
+        },
+        {
+          "row": 2,
+          "field": "recipient_first_name",
+          "got": "Yvonne",
+          "want": "Samuel"
+        },
+        {
+          "row": 2,
+          "field": "recipient_last_name",
+          "got": "Adeyemi",
+          "want": "Brennan"
+        },
+        {
+          "row": 2,
+          "field": "email",
+          "got": "yvonne.a@example.com",
+          "want": "samuel.brennan@example.com"
+        },
+        {
+          "row": 2,
+          "field": "transaction_id",
+          "got": "PT-88",
+          "want": "PT-89"
+        },
+        {
+          "row": 2,
+          "field": "transaction_type",
+          "got": "Listing",
+          "want": null
+        }
+      ],
+      "fieldAccuracy": 0.5,
+      "drafts": [
+        {
+          "recipient_first_name": "Samuel",
+          "recipient_last_name": "Brennan",
+          "email": "samuel.brennan@example.com",
+          "contact_number": null,
+          "transaction_id": "PT-89",
+          "transaction_type": "Listing",
+          "transaction_date": "2026-09-12",
+          "participant_type": "SELLER",
+          "city": "Atlanta",
+          "state": "GA"
+        },
+        {
+          "recipient_first_name": "Yvonne",
+          "recipient_last_name": "Adeyemi",
+          "email": "yvonne.a@example.com",
+          "contact_number": null,
+          "transaction_id": "PT-88",
+          "transaction_type": "Listing",
+          "transaction_date": "2026-09-12",
+          "participant_type": "SELLER",
+          "city": "Atlanta",
+          "state": "GA"
+        }
+      ],
+      "ms": 3158
+    },
+    {
+      "name": "nobody to survey",
+      "passed": true,
+      "wrong": [],
+      "fieldAccuracy": 1,
+      "drafts": [],
+      "ms": 17099
+    }
+  ]
+}

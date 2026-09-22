@@ -1,0 +1,47 @@
+{
+  "provider": "or/gemini",
+  "effort": "n/a",
+  "passed": 1,
+  "total": 1,
+  "avgMs": 11395,
+  "results": [
+    {
+      "name": "multi-state",
+      "prompt": "everyone in Georgia or Washington",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and state in ('GA','WA')",
+      "filter": {
+        "states": [
+          "GA",
+          "WA"
+        ],
+        "cities": null,
+        "industries": null,
+        "subscription_status": null,
+        "is_pro": null,
+        "joined_after": null,
+        "joined_before": null,
+        "min_avg_rating": null,
+        "max_avg_rating": null,
+        "min_reviews": null,
+        "max_reviews": null,
+        "has_reviews": null,
+        "reviewed_within_days": null,
+        "unreplied_review_within_days": null,
+        "has_unreplied_reviews": null,
+        "inactive_days": null,
+        "min_srs": null,
+        "max_srs": null,
+        "order_by": null,
+        "limit": null
+      },
+      "passed": true,
+      "precision": 1,
+      "recall": 1,
+      "extra": 0,
+      "missing": 0,
+      "want": 79,
+      "got": 79,
+      "ms": 11395
+    }
+  ]
+}

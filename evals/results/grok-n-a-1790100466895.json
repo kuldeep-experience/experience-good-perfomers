@@ -1,0 +1,17 @@
+{
+  "provider": "grok",
+  "effort": "n/a",
+  "passed": 0,
+  "total": 1,
+  "avgMs": 1357,
+  "results": [
+    {
+      "name": "absence — no reviews at all",
+      "prompt": "professionals with no reviews at all",
+      "reference": "select id from campaign_professionals where consent_status = 'granted' and unsubscribed_at is null and review_count = 0",
+      "passed": false,
+      "error": "xAI 400: Incorrect API key provided. You can obtain an API key from https://console.x.ai.",
+      "ms": 1357
+    }
+  ]
+}
