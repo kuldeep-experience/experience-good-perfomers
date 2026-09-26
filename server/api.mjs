@@ -1,6 +1,7 @@
 import { getDb } from './db.mjs'
 import { compile, toDisplaySQL } from './filter.mjs'
-import { PROVIDERS, availableProviders, parseDrafts, parsePrompt } from './parse.mjs'
+import { PROVIDERS, availableProviders, parseCampaign, parseDrafts, parsePrompt } from './parse.mjs'
+import { saveCampaign } from './campaign.mjs'
 import { loadContext, renderSurvey, sendKey, validate } from './draft.mjs'
 
 const json = (res, status, body) => {
@@ -92,11 +93,32 @@ export async function handle(req, res) {
 
     if (req.method === 'GET' && url === '/api/campaigns') {
       const db = await getDb()
+      // Recipients, responses, completion and score are counted here rather
+      // than stored, so the campaigns screen can never show a stale number.
       const { rows } = await db.query(
-        `select c.*, (select count(*)::int from survey_sends s where s.campaign_id = c.id) as sent
-           from campaigns c order by c.id`,
+        `select c.*,
+                count(s.*)::int                                            as sent,
+                count(*) filter (where s.status = 'completed')::int        as responses,
+                round(avg(s.rating)::numeric, 2)::float                    as avg_score,
+                max(s.sent_at)                                             as last_activity
+           from campaigns c
+           left join survey_sends s on s.campaign_id = c.id
+          group by c.id
+          order by c.id`,
       )
       return json(res, 200, { rows })
+    }
+
+    // Describe a campaign, get the setup form filled in. Saving is a second,
+    // explicit call — the agent writes the draft, a person keeps or changes it.
+    if (req.method === 'POST' && url === '/api/campaign') {
+      const { text, campaign, provider: requested } = await readBody(req)
+      const db = await getDb()
+      if (campaign) return json(res, 200, { row: await saveCampaign(db, campaign) })
+      if (!text?.trim()) return json(res, 400, { error: 'Describe the campaign first.' })
+      const started = Date.now()
+      const parsed = await parseCampaign(text, requested)
+      return json(res, 200, { ...parsed, ms: Date.now() - started })
     }
 
     // Text in, checked drafts out. Nothing is sent and nothing is written.

@@ -165,6 +165,7 @@ assert.deepEqual(verdicts, [
 // every query the compiler can emit is a select against the one read view, and
 // every table this app writes is campaign-owned.
 const { compile, GRAPH_VIEW } = await import('./filter.mjs')
+const { saveCampaign } = await import('./campaign.mjs')
 const { readFileSync } = await import('node:fs')
 
 const EVERY_FIELD = {
@@ -187,7 +188,7 @@ for (const forCount of [false, true]) {
 // Nothing this app writes may target a graph-owned table.
 const graphTables = [...readFileSync(new URL('../sql/schema.sql', import.meta.url), 'utf8')
   .matchAll(/create table (\w+)/g)].map((m) => m[1])
-const writes = [...['./api.mjs', './draft.mjs']
+const writes = [...['./api.mjs', './draft.mjs', './campaign.mjs']
   .map((f) => readFileSync(new URL(f, import.meta.url), 'utf8'))
   .join('\n')
   .matchAll(/\b(?:insert into|update|delete from)\s+(\w+)/gi)].map((m) => m[1])
@@ -198,3 +199,22 @@ for (const t of writes) {
 
 console.log(`graph boundary: reads only ${GRAPH_VIEW}, writes none of [${graphTables}]`)
 console.log('validator + database: all checks passed')
+
+// saveCampaign is an upsert written by hand: an id must update that row rather
+// than quietly leaving a second copy behind.
+const NEW = {
+  name: 'check', source_type: 'Manual', allowed_participant_types: ['BUYER'],
+  allowed_transaction_types: [], expiry_days: 30, cooldown_days: 90, reminders: 1,
+  send_as: 'a <a@b.com>', subject: 's', intro: 'i',
+  questions: [{ text: 'How was it?', type: 'rating', options: null, required: true }],
+}
+const inserted = await saveCampaign(db, NEW)
+const updated = await saveCampaign(db, { ...inserted, name: 'check v2', status: 'Active' })
+assert.equal(updated.id, inserted.id, 'saving an existing campaign must not make a new one')
+assert.equal(updated.name, 'check v2')
+assert.equal(updated.status, 'Active')
+// The single-question column still drives the email preview.
+assert.equal(updated.question, 'How was it?')
+const { rows: copies } = await db.query("select count(*)::int n from campaigns where name like 'check%'")
+assert.equal(copies[0].n, 1, 'expected exactly one row, not a duplicate')
+console.log('campaign setup: agent-written campaigns save and update in place')

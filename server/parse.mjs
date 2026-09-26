@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { AudienceFilter, SUBSCRIPTION_STATES } from './filter.mjs'
 import { DraftBatch, PARTICIPANT_TYPES } from './draft.mjs'
+import { CampaignDraft, QUESTION_TYPES } from './campaign.mjs'
 
 const AUDIENCE_SYSTEM = `You turn a marketer's plain-English description of an audience into a filter object.
 
@@ -67,6 +68,53 @@ Rules:
 
 Reply with the drafts object only.`
 
+const CAMPAIGN_SYSTEM = `You turn a plain-English description of a survey campaign into a campaign object.
+
+You are filling in the campaign setup form a tier admin fills in by hand today.
+You do not activate anything and you do not send anything. A person reads what
+you produce, edits whatever they want, and presses Activate.
+
+Fields:
+  name                       short and human, what it would be called in a list
+  source_type                Manual | Encompass | Salesforce | AMS360
+  allowed_participant_types  any of: ${PARTICIPANT_TYPES.join(', ')}
+  allowed_transaction_types  e.g. Purchase, Refinance, Listing, Rental.
+                             An empty array means any transaction.
+  expiry_days                days after the transaction the survey stops going out
+  cooldown_days              days before the same person may be surveyed again
+  reminders                  how many reminder emails, 0 to 3
+  send_as                    "Sender Name <address@domain>"
+  subject, intro             the email. {{first_name}} and {{transaction_id}}
+                             are the only slots that exist; use them or plain text.
+  questions                  the survey itself, in the order it is answered
+  gateway                    the secondary workflow: one coarse question, its
+                             colour-coded answers, and the closing message each
+                             answer lands on. Three options is the norm —
+                             a good one (#47BA78), a neutral one (#FFBE4B) and
+                             a bad one (#DC3232). Write a real closing message
+                             for each, in the sender's voice.
+  sms                        an SMS version of the invite. Leave enabled false
+                             unless the description asks for text messages.
+
+Question types: ${QUESTION_TYPES.join(', ')}.
+  rating is 1-5 stars, slider is a 0-10 scale, open_ended is a text box.
+  Set "options" for multiple_choice, dropdown, likert and ranking.
+  Use null for options on rating, slider and open_ended.
+
+Rules:
+- Always return at least one question. Unless the description asks otherwise,
+  open with an overall rating question.
+- Write real copy, never placeholders. Keep every question short enough to read
+  on a phone.
+- Choose sensible defaults for anything the description leaves out: Manual
+  source, 30 day expiry, 90 day cooldown, 2 reminders, any transaction type.
+- Match the participant types to who the description is about. If it does not
+  say, cover the ones that plausibly apply rather than guessing one.
+
+Reply with the campaign object only.`
+
+const looksLikeAKey = (v) => typeof v === 'string' && v.trim().length >= 20
+
 const withDate = (base) => `${base}\n\nToday's date is ${new Date().toISOString().slice(0, 10)}.`
 
 /**
@@ -84,6 +132,7 @@ const task = (name, base, zod) => ({
 export const TASKS = {
   audience: task('audience_filter', AUDIENCE_SYSTEM, AudienceFilter),
   drafts: task('survey_drafts', DRAFT_SYSTEM, DraftBatch),
+  campaign: task('campaign_setup', CAMPAIGN_SYSTEM, CampaignDraft),
 }
 
 async function viaClaude(prompt, t) {
@@ -208,21 +257,27 @@ export const PROVIDERS = {
       },
     ]),
   ),
-  ...(process.env.ANTHROPIC_API_KEY
+  ...(looksLikeAKey(process.env.ANTHROPIC_API_KEY)
     ? { claude: { label: 'Claude', group: 'Anthropic', envKey: 'ANTHROPIC_API_KEY', model: process.env.ANTHROPIC_MODEL || 'claude-opus-5', run: viaClaude } }
     : {}),
 }
 
-/** Provider names that actually have a key set. */
+/**
+ * Provider names with a usable key. A leftover placeholder from .env.example is
+ * non-empty, so "is it set" is not the question — every real key from these
+ * vendors is far longer than this, and offering a provider that cannot work is
+ * worse than not offering it.
+ */
 export const availableProviders = () =>
-  Object.keys(PROVIDERS).filter((name) => process.env[PROVIDERS[name].envKey])
+  Object.keys(PROVIDERS).filter((name) => looksLikeAKey(process.env[PROVIDERS[name].envKey]))
 
 export function resolveProvider(requested) {
   const want = requested || process.env.PARSER_PROVIDER
   if (want) {
     const p = PROVIDERS[want]
     if (!p) throw new Error(`Unknown provider "${want}". Use one of: ${Object.keys(PROVIDERS).join(', ')}`)
-    if (!process.env[p.envKey]) throw new Error(`${p.label} needs ${p.envKey} in your .env`)
+    if (!looksLikeAKey(process.env[p.envKey]))
+      throw new Error(`${p.label} needs a real ${p.envKey} in your .env`)
     return want
   }
   const [first] = availableProviders()
@@ -253,4 +308,10 @@ export async function parsePrompt(prompt, requested) {
 export async function parseDrafts(text, requested) {
   const { provider, raw } = await run(text, TASKS.drafts, requested)
   return { provider, drafts: DraftBatch.parse(raw).drafts }
+}
+
+/** A description of a campaign -> the setup form, filled in but not saved. */
+export async function parseCampaign(text, requested) {
+  const { provider, raw } = await run(text, TASKS.campaign, requested)
+  return { provider, campaign: CampaignDraft.parse(raw) }
 }
