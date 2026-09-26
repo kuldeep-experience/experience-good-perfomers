@@ -1,16 +1,37 @@
 # Campaign agent
 
-Two prototypes against **Campaigns (discipline 06)**, sharing one design and one
+Three prototypes against **Campaigns (discipline 06)**, sharing one design and one
 guardrail.
 
-1. **Send surveys** — paste anything that names recipients (an email, a
-   spreadsheet, a sentence). The agent fills in the Send Manual Survey form,
-   checks every draft against the campaign's set conditions, and a person
-   approves the send.
-2. **Audience builder** — describe an audience in plain English; the system
+1. **Build a campaign** — describe it in one sentence. The agent fills in the
+   whole five-step setup wizard: the survey questions and their types, the
+   secondary workflow, the email, and the set conditions. A tier admin edits
+   whatever it likes and presses Activate.
+2. **Send surveys** — paste anything that names recipients, or upload a
+   spreadsheet. The agent fills in the Send Manual Survey form, checks every
+   draft against the campaign's set conditions, and a person approves the send.
+3. **Audience builder** — describe an audience in plain English; the system
    compiles it to a query and shows the count, a sample and the SQL.
 
-Both work the same way: **the model fills in a form, code does everything else.**
+All three work the same way: **the model fills in a form, code does everything
+else.**
+
+### Two roles
+
+The work splits in two, so the app does too. Sign in as either:
+
+| Role | Email | Password | Sees |
+| --- | --- | --- | --- |
+| Tier admin | `tier@ddhotel.com` | `demo1234` | Campaigns, Send survey, Audience builder |
+| Agent (child of the tier) | `agent@ddhotel.com` | `demo1234` | The active campaigns, and sending from them |
+
+The agent is offered only campaigns the tier has activated, and every choice on
+the send screen is read off the selected campaign. A paused campaign accepts
+nothing, so it is not offered at all — otherwise the form would take the send
+and it would never arrive.
+
+The sign-in is a demo, kept in `localStorage`. It is not a security boundary;
+the server does not read it.
 
 ---
 
@@ -45,6 +66,20 @@ Three things, in order of how much they are worth:
 2. **Extract.** Turn pasted text into filled forms. This is the part a dropdown
    cannot do, and the only part that needs a model.
 3. **Batch.** The drawer is one recipient at a time. A paste is forty.
+
+### Three ways in, one path through
+
+The agent picks a campaign, then names recipients however is convenient:
+
+- **Typed or pasted** — a sentence, a forwarded email, a spreadsheet's worth of
+  rows.
+- **Uploaded** — `.xlsx`, `.csv`, `.tsv`. `src/upload.ts` turns the file into
+  text and hands it to the same extractor, so there is no second, weaker route
+  into the send path for files.
+
+Every detail field offers click-to-fill options, and those options come from the
+selected campaign's own set conditions — nothing is hardcoded, so a suggestion
+can never propose a value the campaign would reject.
 
 ### Preview, approve, send
 

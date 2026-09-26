@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/sendsurveys.tsx","./src/main.tsx"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/audiencebuilder.tsx","./src/campaigntable.tsx","./src/campaigns.tsx","./src/login.tsx","./src/sendsurveys.tsx","./src/shell.tsx","./src/surveypreview.tsx","./src/main.tsx","./src/session.ts","./src/shared.ts","./src/upload.ts"],"version":"5.9.3"}

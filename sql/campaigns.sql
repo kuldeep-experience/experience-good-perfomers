@@ -113,3 +113,61 @@ values
 insert into suppressions (email, reason) values
   ('nina.kowalski@example.com', 'unsubscribed'),
   ('peter.herrera@example.com', 'bounced');
+
+-- The survey itself. XMP's editor lets a tier add any number of questions of
+-- different types; one text column could not hold that. The seeded campaigns
+-- get their single question lifted into the new shape rather than re-typed.
+alter table campaigns add column questions jsonb not null default '[]';
+
+update campaigns set questions = jsonb_build_array(
+  jsonb_build_object('text', question, 'type', 'rating', 'options', null, 'required', true)
+);
+
+update campaigns set questions = questions || jsonb_build_array(
+  jsonb_build_object('text', 'What stood out about your stay?', 'type', 'open_ended',
+                     'options', null, 'required', false)
+) where name = 'Image question';
+
+-- ---------------------------------------------------------------------------
+-- The rest of the XMP setup wizard.
+
+-- When the campaign was last touched. The campaigns screen sorts and reports
+-- on it, so it has to be written on every save rather than guessed.
+alter table campaigns add column updated_at timestamptz not null default now();
+
+-- Secondary workflow: the gateway question, its colour-coded answers and the
+-- message each answer ends on. All data, no branching code — which is why the
+-- agent can write one and a person can read it back.
+alter table campaigns add column gateway jsonb not null default
+  '{"enabled": true,
+    "question": "How would you rate your overall experience?",
+    "options": [
+      {"label": "Great",     "color": "#47BA78", "message": "Thank you for your great feedback! We appreciate your positive response."},
+      {"label": "OK",        "color": "#FFBE4B", "message": "Thank you for your feedback. We will work to improve your experience."},
+      {"label": "Unpleasant","color": "#DC3232", "message": "We are sorry to hear about your experience. We take your feedback seriously and will make improvements."}
+    ]}'::jsonb;
+
+alter table campaigns add column sms jsonb not null default
+  '{"enabled": false, "text": "Hi {{first_name}}, how did we do? Tap to answer one question:"}'::jsonb;
+
+-- What came back. Without it the completion rate and average score on the
+-- campaigns screen would be decoration rather than a measurement.
+alter table survey_sends add column rating int;
+
+update survey_sends set status = 'completed', rating = 5 where transaction_id = 'TXN-88213';
+update survey_sends set status = 'completed', rating = 4 where transaction_id = 'TXN-11024';
+
+-- Enough history that the numbers on the campaigns screen are computed.
+insert into survey_sends
+  (campaign_id, transaction_id, email, participant_type, transaction_date, sent_at, status, rating)
+select
+  c.id,
+  'SEED-' || c.id || '-' || n,
+  'person' || c.id || '-' || n || '@seed.example',
+  c.allowed_participant_types[1],
+  current_date - (n % 60),
+  now() - ((n % 60) || ' days')::interval,
+  case when (n * 7 + c.id) % 10 < 6 then 'completed' else 'sent' end,
+  case when (n * 7 + c.id) % 10 < 6 then 3 + ((n + c.id) % 3) else null end
+from campaigns c, generate_series(1, 140) n
+where c.status = 'Active';
