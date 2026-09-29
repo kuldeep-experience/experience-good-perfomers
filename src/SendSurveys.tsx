@@ -146,10 +146,17 @@ export default function SendSurveys({ preset }: { preset?: Campaign | null }) {
       body: JSON.stringify({ campaign_id: campaign.id, drafts: toSend.map((c) => c.draft) }),
     })
     const data = await res.json()
-    // Re-check first — it clears `sent` — then show the confirmation, so the
-    // "now a duplicate" verdicts and the receipt appear together.
-    await post({ drafts: checked!.map((c) => c.draft) })
+    // Show success message and clear the form
     setSent(`Sent ${data.sent} survey${data.sent === 1 ? '' : 's'}.`)
+    // Reset form to initial state after successful send
+    setTimeout(() => {
+      setText(Object.values(EXAMPLES)[1])
+      setFile(null)
+      setChecked(null)
+      setApproved(new Set())
+      setStage('edit')
+      setMeta(null)
+    }, 2000)
   }
 
   // ------------------------------------------------------- pick a campaign
@@ -293,6 +300,12 @@ export default function SendSurveys({ preset }: { preset?: Campaign | null }) {
       {error && (
         <p className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {error}
+        </p>
+      )}
+
+      {sent && (
+        <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+          ✓ {sent}
         </p>
       )}
 
