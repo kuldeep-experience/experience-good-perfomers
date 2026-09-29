@@ -90,7 +90,9 @@ export default function Campaigns({ onSend }: { onSend: (c: Campaign) => void })
   const load = () =>
     fetch('/api/campaigns')
       .then((r) => r.json())
-      .then((d: { rows: Campaign[] }) => setRows(d.rows))
+      .then((d: { rows?: Campaign[]; error?: string }) =>
+        d.rows ? setRows(d.rows) : setError(d.error ?? 'Could not load campaigns.'),
+      )
       .catch(() => {})
 
   useEffect(() => {
@@ -143,9 +145,15 @@ export default function Campaigns({ onSend }: { onSend: (c: Campaign) => void })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      setDraft(data.row)
-      setNote(status === 'Active' ? 'Activated. It can take sends now.' : 'Saved.')
-      load()
+      // Reload first, so the list is already current when the editor closes.
+      await load()
+      if (status === 'Active') {
+        setDraft(null)
+        setNote(`"${data.row.name}" is active. Agents can send from it now.`)
+      } else {
+        setDraft(data.row)
+        setNote('Saved.')
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -174,7 +182,10 @@ export default function Campaigns({ onSend }: { onSend: (c: Campaign) => void })
               Columns
             </span>
             <button
-              onClick={() => setCreating((c) => !c)}
+              onClick={() => {
+                setCreating((c) => !c)
+                setNote(null)
+              }}
               className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium"
             >
               Create new ⌄
@@ -247,6 +258,12 @@ export default function Campaigns({ onSend }: { onSend: (c: Campaign) => void })
               </p>
             )}
           </section>
+        )}
+
+        {note && (
+          <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 ring-1 ring-emerald-200">
+            ✓ {note}
+          </p>
         )}
 
         <div className="mt-4">

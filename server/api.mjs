@@ -92,21 +92,30 @@ export async function handle(req, res) {
     }
 
     if (req.method === 'GET' && url === '/api/campaigns') {
-      const db = await getDb()
-      // Recipients, responses, completion and score are counted here rather
-      // than stored, so the campaigns screen can never show a stale number.
-      const { rows } = await db.query(
-        `select c.*,
-                count(s.*)::int                                            as sent,
-                count(*) filter (where s.status = 'completed')::int        as responses,
-                round(avg(s.rating)::numeric, 2)::float                    as avg_score,
-                max(s.sent_at)                                             as last_activity
-           from campaigns c
-           left join survey_sends s on s.campaign_id = c.id
-          group by c.id
-          order by c.id`,
-      )
-      return json(res, 200, { rows })
+      try {
+        const db = await getDb()
+        // Recipients, responses, completion and score are counted here rather
+        // than stored, so the campaigns screen can never show a stale number.
+        const { rows } = await db.query(
+          `select c.id, c.name, c.status, c.source_type, c.allowed_participant_types,
+                  c.allowed_transaction_types, c.expiry_days, c.cooldown_days, c.reminders,
+                  c.send_as, c.subject, c.intro, c.question, c.questions, c.updated_at, c.gateway, c.sms,
+                  count(s.*)::int                                            as sent,
+                  count(s.*) filter (where s.status = 'completed')::int        as responses,
+                  round(avg(s.rating)::numeric, 2)::float                    as avg_score,
+                  max(s.sent_at)                                             as last_activity
+             from campaigns c
+             left join survey_sends s on s.campaign_id = c.id
+            group by c.id, c.name, c.status, c.source_type, c.allowed_participant_types,
+                     c.allowed_transaction_types, c.expiry_days, c.cooldown_days, c.reminders,
+                     c.send_as, c.subject, c.intro, c.question, c.questions, c.updated_at, c.gateway, c.sms
+            order by c.id`,
+        )
+        return json(res, 200, { rows })
+      } catch (err) {
+        console.error('❌ GET /api/campaigns failed:', err.message)
+        return json(res, 500, { error: err.message })
+      }
     }
 
     // Describe a campaign, get the setup form filled in. Saving is a second,

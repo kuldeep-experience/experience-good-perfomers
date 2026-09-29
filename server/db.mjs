@@ -1,18 +1,27 @@
-import { PGlite } from '@electric-sql/pglite'
+import { Pool } from 'pg'
 import { readFileSync } from 'node:fs'
 
 let ready
 
 const load = (name) => readFileSync(new URL(`../sql/${name}`, import.meta.url), 'utf8')
 
-/** Single in-process Postgres, seeded once per server start. */
+/** Connect to Supabase PostgreSQL. Initialize schema once per server start. */
 export function getDb() {
   if (!ready) {
     ready = (async () => {
-      const db = await PGlite.create()
-      await db.exec(load('schema.sql'))
-      await db.exec(load('campaigns.sql'))
-      return db
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+      })
+      // Initialize schema (idempotent — CREATE TABLE IF NOT EXISTS)
+      const client = await pool.connect()
+      try {
+        await client.query(load('schema.sql'))
+        await client.query(load('campaigns.sql'))
+      } finally {
+        client.release()
+      }
+        
+      return pool
     })()
   }
   return ready
